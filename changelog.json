@@ -4,7 +4,7 @@
     "updates": {
         "✨ AniList Integration Added!": "You can now connect your AniList account to automatically track your watch progress.",
         "📱 Mobile Player Overhauled": "Fixed portrait mode controls, improved tap-to-pause behavior, and adjusted the episode layout on mobile screens.",
-        "🐛 Sub/Dub Sync Fix": "Switching between Sub and Dub will now remember the exact episode you were watching."
+        "🐛 Sub/Dub Sync Fix": "Switching between Sub and Dub will now remember the exact episode you were watching.",
         "No Ads": "Ts never contain any ads."
     }
 }
