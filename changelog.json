@@ -2,10 +2,9 @@
     "version": "5.0",
     "title": "What's New in Kurovexa",
     "updates": {
-        "✨ AniList Integration Added!": "You can now connect your AniList account to automatically track your watch progress.",
-        "📱 Mobile Player Overhauled": "Fixed portrait mode controls, improved tap-to-pause behavior, and adjusted the episode layout on mobile screens.",
-        "🐛 Sub/Dub Sync Fix": "Switching between Sub and Dub will now remember the exact episode you were watching.",
-        "☢️": "Opensource on github. Check https://github.com/walterwhite-69/Kurovexa."
+        "✨New Embed Player": "Added new embed player called Pulsar",
+        "📱 Added Download buttons": "Users can now download any episode",
+        "😺 Opensource on github": "Check https://github.com/walterwhite-69/Kurovexa."
         
     }
 }
