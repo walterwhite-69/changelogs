@@ -1,9 +1,8 @@
-    {
-    "version": "7.0",
-    "title": "What's New in Kurovexa",
-    "updates": {
-        "Bugs": "Fixed some minor bugs",
-        "😺 Opensource on github": "Check https://github.com/walterwhite-69/Kurovexa."
-        
-    }
+{
+  "version": "7.0",
+  "title": "What's New in Kurovexa",
+  "updates": {
+    "bugs": "Fixed some minor bugs",
+    "github": "Check https://github.com/walterwhite-69/Kurovexa"
+  }
 }
