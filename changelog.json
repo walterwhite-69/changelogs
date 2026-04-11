@@ -1,8 +1,8 @@
 {
-  "version": "9.0",
+  "version": "10.0",
   "title": "Welcome to Kurovexa ✨",
   "updates": {
     "Update": "Maintenance is complete! Everything is back up and running—enjoy your anime without interruptions.",
-    "Comment Section": "Added new comment section, keep in mind that explicit comments will be resulted in account ban."
+    "Comment Section": "Added Comment section. Explicit comments may result in an account ban."
   }
 }
