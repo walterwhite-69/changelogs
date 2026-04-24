@@ -1,8 +1,7 @@
 {
-  "version": "10.0",
-  "title": "Welcome to Kurovexa ✨",
+  "version": "11.0",
+  "title": "Maintenance",
   "updates": {
-    "Update": "Maintenance is complete! Everything is back up and running—enjoy your anime without interruptions.",
-    "Comment Section": "Added Comment section. Explicit comments may result in an account ban."
+    "Update": "Kurovexa Version 2.0 is under construction. Some features may not work."
   }
 }
