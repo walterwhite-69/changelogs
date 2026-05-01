@@ -1,1 +1,1017 @@
 
+{
+  "meta": {
+    "name": "Mugen",
+    "tagline": "A free, open REST API for anime, manga, and movies — no key required.",
+    "description": "Mugen aggregates streaming sources and metadata from multiple providers across anime, manga, and movies. All endpoints return clean JSON. No authentication needed.",
+    "version": "1.0.0",
+    "base_url": "https://your-api.example.com",
+    "github": "https://github.com/your-username/mugen"
+  },
+  "categories": [
+    {
+      "id": "anime",
+      "name": "Anime",
+      "description": "Stream anime episodes from multiple providers. Supports sub and dub, multiple servers, and direct M3U8 extraction.",
+      "providers": [
+        {
+          "id": "animekai",
+          "name": "AnimeKai",
+          "description": "AnimeKai is a fast anime streaming site with a wide catalog. Supports both sub and dub. Streams are extracted as M3U8.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/anime/animekai/home",
+              "summary": "Get homepage",
+              "description": "Returns the homepage content of AnimeKai — trending, recently updated, and popular anime. Great for building a discover or browse section in your app.",
+              "params": [],
+              "response_example": {
+                "trending": [
+                  { "title": "Solo Leveling", "slug": "solo-leveling", "poster": "https://..." }
+                ],
+                "recent": [
+                  { "title": "Demon Slayer", "slug": "demon-slayer", "episode": 12 }
+                ]
+              }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/animekai/search",
+              "summary": "Search anime",
+              "description": "Search for anime by title or keyword. Returns a list of matching results with slugs you can use for the info endpoint.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "The search query — anime title or keyword.", "example": "attack on titan" }
+              ],
+              "response_example": {
+                "results": [
+                  { "title": "Attack on Titan", "slug": "attack-on-titan", "poster": "https://...", "status": "Completed" }
+                ]
+              }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/anime/animekai/info/{slug}",
+              "summary": "Get anime info",
+              "description": "Returns full metadata for an anime — title, synopsis, genres, total episodes, and the ani_id needed to fetch episodes.",
+              "params": [
+                { "name": "slug", "in": "path", "required": true, "type": "string", "description": "The anime slug from search results.", "example": "attack-on-titan" }
+              ],
+              "response_example": {
+                "title": "Attack on Titan",
+                "synopsis": "Humans live behind walls to survive giant humanoid Titans...",
+                "genres": ["Action", "Drama", "Fantasy"],
+                "status": "Completed",
+                "total_episodes": 87,
+                "ani_id": "abc123"
+              }
+            },
+            {
+              "id": "episodes",
+              "method": "GET",
+              "path": "/anime/animekai/episodes/{ani_id}",
+              "summary": "Get episode list",
+              "description": "Returns the full list of available episodes for an anime. Each episode has a token used to fetch available servers.",
+              "params": [
+                { "name": "ani_id", "in": "path", "required": true, "type": "string", "description": "The anime ID returned from the info endpoint.", "example": "abc123" }
+              ],
+              "response_example": {
+                "episodes": [
+                  { "number": 1, "title": "To You, 2000 Years Later", "ep_token": "xyz789" }
+                ]
+              }
+            },
+            {
+              "id": "servers",
+              "method": "GET",
+              "path": "/anime/animekai/servers/{ep_token}",
+              "summary": "Get episode servers",
+              "description": "Returns available streaming servers for a given episode. Each server has a link_id you use to get the actual stream.",
+              "params": [
+                { "name": "ep_token", "in": "path", "required": true, "type": "string", "description": "The episode token from the episodes endpoint.", "example": "xyz789" }
+              ],
+              "response_example": {
+                "sub": [{ "server": "Vidstreaming", "link_id": "lnk001" }],
+                "dub": [{ "server": "Vidstreaming", "link_id": "lnk002" }]
+              }
+            },
+            {
+              "id": "source",
+              "method": "GET",
+              "path": "/anime/animekai/source/{link_id}",
+              "summary": "Get stream source",
+              "description": "Resolves a server link to actual streaming URLs. Returns a list of quality options and a top-level m3u8 field with the best HLS stream ready to play.",
+              "params": [
+                { "name": "link_id", "in": "path", "required": true, "type": "string", "description": "The server link ID from the servers endpoint.", "example": "lnk001" }
+              ],
+              "response_example": {
+                "sources": [
+                  { "file": "https://cdn.example.com/hls/master.m3u8", "quality": "auto", "is_m3u8": true }
+                ],
+                "m3u8": "https://cdn.example.com/hls/master.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "animepahe",
+          "name": "AnimePahe",
+          "description": "AnimePahe is known for small-sized, high-quality anime encodes. Good for users on limited bandwidth. Episodes use Kwik as the streaming host.",
+          "status": "working",
+          "note": "Streaming requires two steps: call /stream to get the Kwik URL, then call /kwik to resolve the final M3U8.",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/anime/animepahe/home",
+              "summary": "Get homepage",
+              "description": "Returns the latest released anime episodes on AnimePahe. Useful for showing recent activity to your users.",
+              "params": [
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number for pagination." }
+              ],
+              "response_example": {
+                "data": [
+                  { "title": "Naruto Shippuden", "session": "abc-def-123", "episode": 450, "snapshot": "https://..." }
+                ]
+              }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/animepahe/search",
+              "summary": "Search anime",
+              "description": "Search the AnimePahe catalog. Returns anime sessions — the session value is used in all subsequent calls for that anime.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Anime title to search for.", "example": "one piece" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." }
+              ],
+              "response_example": {
+                "results": [{ "title": "One Piece", "session": "abc-def-123", "poster": "https://..." }]
+              }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/anime/animepahe/info/{session}",
+              "summary": "Get anime info",
+              "description": "Returns metadata for an anime — title, synopsis, genres, year, and episode count.",
+              "params": [
+                { "name": "session", "in": "path", "required": true, "type": "string", "description": "The anime session ID from search results.", "example": "abc-def-123" }
+              ],
+              "response_example": {
+                "title": "One Piece", "year": 1999, "genres": ["Action", "Adventure"], "episodes": 1100
+              }
+            },
+            {
+              "id": "episodes",
+              "method": "GET",
+              "path": "/anime/animepahe/episodes/{session}",
+              "summary": "Get episode list",
+              "description": "Returns a paginated list of episodes. Each episode has its own session ID for streaming.",
+              "params": [
+                { "name": "session", "in": "path", "required": true, "type": "string", "description": "Anime session ID.", "example": "abc-def-123" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page of episodes." },
+                { "name": "sort", "in": "query", "required": false, "type": "string", "default": "episode_asc", "description": "Sort order: episode_asc or episode_desc." }
+              ],
+              "response_example": {
+                "data": [{ "episode": 1, "session": "ep-session-abc" }],
+                "total": 1100, "per_page": 30
+              }
+            },
+            {
+              "id": "stream",
+              "method": "GET",
+              "path": "/anime/animepahe/stream/{anime_session}/{episode_session}",
+              "summary": "Get Kwik stream URL",
+              "description": "Returns the Kwik embed link for an episode. This is an intermediate step — pass the kwik_url to the /kwik endpoint to get the final playable M3U8.",
+              "params": [
+                { "name": "anime_session", "in": "path", "required": true, "type": "string", "description": "The anime session ID.", "example": "abc-def-123" },
+                { "name": "episode_session", "in": "path", "required": true, "type": "string", "description": "The episode session ID.", "example": "ep-session-abc" }
+              ],
+              "response_example": {
+                "sources": [{ "url": "https://kwik.si/e/xxx", "audio": "jpn" }],
+                "kwik_url": "https://kwik.si/e/xxx",
+                "note": "Call /api/anime/animepahe/kwik?url=<kwik_url> to resolve to final m3u8"
+              }
+            },
+            {
+              "id": "kwik",
+              "method": "GET",
+              "path": "/anime/animepahe/kwik",
+              "summary": "Resolve Kwik to M3U8",
+              "description": "Takes a Kwik embed URL and resolves it to a final, playable M3U8 stream. This is the last step in the AnimePahe streaming flow.",
+              "params": [
+                { "name": "url", "in": "query", "required": true, "type": "string", "description": "The Kwik embed URL from the /stream endpoint.", "example": "https://kwik.si/e/xxx" }
+              ],
+              "response_example": {
+                "video_url": "https://na-301.files.nextcdn.org/stream/xxx/master.m3u8",
+                "m3u8": "https://na-301.files.nextcdn.org/stream/xxx/master.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "animetsu",
+          "name": "Animetsu",
+          "description": "Animetsu provides a large anime catalog with multiple quality options. Supports sub, dub, and multiple CDN servers.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/anime/animetsu/home",
+              "summary": "Get homepage",
+              "description": "Returns homepage sections including trending, recently aired, and top-rated anime.",
+              "params": [],
+              "response_example": { "trending": [], "recent": [] }
+            },
+            {
+              "id": "recent",
+              "method": "GET",
+              "path": "/anime/animetsu/recent",
+              "summary": "Get recent episodes",
+              "description": "Returns recently released anime episodes. Paginated, and you can control how many results you get back.",
+              "params": [
+                { "name": "page", "in": "query", "required": false, "type": "string", "default": "1", "description": "Page number." },
+                { "name": "per_page", "in": "query", "required": false, "type": "string", "default": "12", "description": "Number of results per page." }
+              ],
+              "response_example": { "data": [], "total": 0, "page": 1 }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/animetsu/search",
+              "summary": "Search anime",
+              "description": "Full-text search across the Animetsu catalog. Supports pagination.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Search query.", "example": "bleach" },
+                { "name": "page", "in": "query", "required": false, "type": "string", "default": "1", "description": "Page number." },
+                { "name": "per_page", "in": "query", "required": false, "type": "string", "default": "20", "description": "Results per page." }
+              ],
+              "response_example": { "data": [{ "id": "bleach", "title": "Bleach" }], "total": 1 }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/anime/animetsu/info/{anime_id}",
+              "summary": "Get anime info",
+              "description": "Returns complete metadata: title, cover, synopsis, genres, year, season, status, and related entries.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID from search results.", "example": "bleach" }
+              ],
+              "response_example": { "title": "Bleach", "genres": ["Action"], "episodes_count": 366 }
+            },
+            {
+              "id": "episodes",
+              "method": "GET",
+              "path": "/anime/animetsu/episodes/{anime_id}",
+              "summary": "Get episode list",
+              "description": "Returns all available episodes for the specified anime.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "bleach" }
+              ],
+              "response_example": { "data": [{ "number": 1, "title": "The Day I Became a Shinigami" }] }
+            },
+            {
+              "id": "servers",
+              "method": "GET",
+              "path": "/anime/animetsu/servers/{anime_id}/{episode}",
+              "summary": "Get episode servers",
+              "description": "Lists all available streaming servers for a specific episode. Returns sub and dub options from different CDN providers.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "bleach" },
+                { "name": "episode", "in": "path", "required": true, "type": "string", "description": "Episode number.", "example": "1" }
+              ],
+              "response_example": { "sub": [{ "provider": "hd1", "server": "Vidcloud" }], "dub": [] }
+            },
+            {
+              "id": "sources",
+              "method": "GET",
+              "path": "/anime/animetsu/sources/{provider}/{anime_id}/{episode}",
+              "summary": "Get stream sources",
+              "description": "Fetches the actual stream URLs from a given server. Returns sources list and a top-level m3u8 field.",
+              "params": [
+                { "name": "provider", "in": "path", "required": true, "type": "string", "description": "Provider name from servers endpoint.", "example": "hd1" },
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "Anime ID.", "example": "bleach" },
+                { "name": "episode", "in": "path", "required": true, "type": "string", "description": "Episode number.", "example": "1" },
+                { "name": "server", "in": "query", "required": false, "type": "string", "default": "default", "description": "Server preference." },
+                { "name": "source_type", "in": "query", "required": false, "type": "string", "default": "sub", "description": "sub or dub." }
+              ],
+              "response_example": {
+                "sources": [{ "decoded_url": "https://cdn.example.com/stream.m3u8", "is_m3u8": true }],
+                "m3u8": "https://cdn.example.com/stream.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "kuudere",
+          "name": "Kuudere",
+          "description": "Kuudere is a clean anime streaming site. Supports recommendations and direct stream resolution.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/anime/kuudere/home",
+              "summary": "Get homepage",
+              "description": "Returns featured and recently updated anime from Kuudere's homepage.",
+              "params": [],
+              "response_example": { "featured": [], "recent": [] }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/kuudere/search",
+              "summary": "Search anime",
+              "description": "Search the Kuudere catalog by title or keyword.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Anime title to search for.", "example": "naruto" }
+              ],
+              "response_example": { "results": [{ "id": "naruto", "title": "Naruto" }] }
+            },
+            {
+              "id": "hover",
+              "method": "GET",
+              "path": "/anime/kuudere/hover/{anime_id}",
+              "summary": "Get anime quick info",
+              "description": "Returns a quick summary card for an anime — useful for hover tooltips or preview modals without loading the full detail page.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "naruto" }
+              ],
+              "response_example": { "title": "Naruto", "synopsis": "...", "episodes": 220, "status": "Completed" }
+            },
+            {
+              "id": "recommendations",
+              "method": "GET",
+              "path": "/anime/kuudere/recommendations/{anime_id}",
+              "summary": "Get recommendations",
+              "description": "Returns a list of anime recommended based on the given anime. Great for building a 'You might also like' section.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID to base recommendations on.", "example": "naruto" }
+              ],
+              "response_example": { "recommendations": [{ "id": "naruto-shippuden", "title": "Naruto: Shippuden" }] }
+            },
+            {
+              "id": "watch",
+              "method": "GET",
+              "path": "/anime/kuudere/watch/{anime_id}/{episode_number}",
+              "summary": "Get stream for episode",
+              "description": "Returns the streaming embed links for a given episode. The m3u8 field is extracted and surfaced directly for convenience.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "naruto" },
+                { "name": "episode_number", "in": "path", "required": true, "type": "string", "description": "The episode number.", "example": "1" }
+              ],
+              "response_example": {
+                "embed_links": [{ "server": "vidmoly", "url": "https://vidmoly.to/embed/xxx" }],
+                "m3u8": "https://cdn.example.com/hls/master.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "anidap",
+          "name": "Anidap",
+          "description": "Anidap provides anime streaming with trending and recent sections. Supports multiple host servers for each episode.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/anidap/search",
+              "summary": "Search anime",
+              "description": "Search Anidap's catalog by title.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Anime title to search.", "example": "fullmetal alchemist" }
+              ],
+              "response_example": { "results": [{ "id": "fmab", "title": "Fullmetal Alchemist: Brotherhood" }] }
+            },
+            {
+              "id": "trending",
+              "method": "GET",
+              "path": "/anime/anidap/trending",
+              "summary": "Get trending anime",
+              "description": "Returns currently trending anime on Anidap. Updated frequently.",
+              "params": [],
+              "response_example": { "results": [{ "id": "fmab", "title": "Fullmetal Alchemist: Brotherhood" }] }
+            },
+            {
+              "id": "recents",
+              "method": "GET",
+              "path": "/anime/anidap/recents",
+              "summary": "Get recent releases",
+              "description": "Returns the most recently released anime episodes on Anidap.",
+              "params": [],
+              "response_example": { "results": [{ "id": "fmab", "title": "Fullmetal Alchemist: Brotherhood", "episode": 4 }] }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/anime/anidap/info/{anime_id}",
+              "summary": "Get anime info",
+              "description": "Returns complete metadata for a specific anime.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "fmab" }
+              ],
+              "response_example": { "title": "Fullmetal Alchemist: Brotherhood", "genres": ["Action"], "episodes": 64 }
+            },
+            {
+              "id": "episodes",
+              "method": "GET",
+              "path": "/anime/anidap/episodes/{anime_id}",
+              "summary": "Get episode list",
+              "description": "Returns all episodes for the specified anime.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "fmab" }
+              ],
+              "response_example": { "episodes": [{ "number": 1, "title": "Fullmetal Alchemist" }] }
+            },
+            {
+              "id": "servers",
+              "method": "GET",
+              "path": "/anime/anidap/servers/{anime_id}",
+              "summary": "Get episode servers",
+              "description": "Returns available streaming servers for a specific episode.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "fmab" },
+                { "name": "ep", "in": "query", "required": true, "type": "string", "description": "Episode number.", "example": "1" }
+              ],
+              "response_example": { "servers": [{ "host": "yuki", "type": "sub" }] }
+            },
+            {
+              "id": "source",
+              "method": "GET",
+              "path": "/anime/anidap/source/{anime_id}",
+              "summary": "Get stream source",
+              "description": "Fetches the actual stream from a chosen server. Returns sources and a top-level m3u8 field.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "fmab" },
+                { "name": "ep", "in": "query", "required": true, "type": "string", "description": "Episode number.", "example": "1" },
+                { "name": "host", "in": "query", "required": false, "type": "string", "default": "yuki", "description": "Server host name." },
+                { "name": "type", "in": "query", "required": false, "type": "string", "default": "sub", "description": "sub or dub." }
+              ],
+              "response_example": {
+                "sources": [{ "url": "https://cdn.example.com/hls/ep1.m3u8", "is_m3u8": true }],
+                "m3u8": "https://cdn.example.com/hls/ep1.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "anikage",
+          "name": "Anikage",
+          "description": "Anikage is an anime streaming provider with sub and dub support across multiple CDN servers.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/anime/anikage/search",
+              "summary": "Search anime",
+              "description": "Search Anikage for anime by title or keyword.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Anime title to search for.", "example": "jujutsu kaisen" }
+              ],
+              "response_example": { "results": [{ "id": "jjk", "title": "Jujutsu Kaisen" }] }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/anime/anikage/info/{anime_id}",
+              "summary": "Get anime info",
+              "description": "Returns complete metadata for an anime — title, cover, synopsis, episode count, and status.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "jjk" }
+              ],
+              "response_example": { "title": "Jujutsu Kaisen", "episodes": 24, "status": "Completed" }
+            },
+            {
+              "id": "episodes",
+              "method": "GET",
+              "path": "/anime/anikage/episodes/{anime_id}",
+              "summary": "Get episode list",
+              "description": "Returns all available episodes for an anime.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "jjk" }
+              ],
+              "response_example": { "episodes": [{ "number": 1, "title": "Ryomen Sukuna" }] }
+            },
+            {
+              "id": "servers",
+              "method": "GET",
+              "path": "/anime/anikage/servers/{anime_id}",
+              "summary": "Get episode servers",
+              "description": "Returns available servers for a specific episode — useful for giving users server choice.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "jjk" },
+                { "name": "ep", "in": "query", "required": true, "type": "string", "description": "Episode number.", "example": "1" },
+                { "name": "type", "in": "query", "required": false, "type": "string", "default": "sub", "description": "sub or dub." }
+              ],
+              "response_example": { "servers": [{ "host": "server1", "name": "HD-1" }] }
+            },
+            {
+              "id": "source",
+              "method": "GET",
+              "path": "/anime/anikage/source/{anime_id}",
+              "summary": "Get stream source",
+              "description": "Resolves a specific server to actual streaming URLs. Returns sources with qualities and a top-level m3u8 when available.",
+              "params": [
+                { "name": "anime_id", "in": "path", "required": true, "type": "string", "description": "The anime ID.", "example": "jjk" },
+                { "name": "host", "in": "query", "required": true, "type": "string", "description": "Server host from servers endpoint.", "example": "server1" },
+                { "name": "ep", "in": "query", "required": true, "type": "string", "description": "Episode number.", "example": "1" },
+                { "name": "type", "in": "query", "required": false, "type": "string", "default": "sub", "description": "sub or dub." }
+              ],
+              "response_example": {
+                "sources": [{ "url": "https://cdn.example.com/hls/ep1.m3u8", "quality": "1080p" }],
+                "m3u8": "https://cdn.example.com/hls/ep1.m3u8"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "manga",
+      "name": "Manga",
+      "description": "Read manga chapters with high-quality page images from multiple providers.",
+      "providers": [
+        {
+          "id": "comix",
+          "name": "Comix",
+          "description": "Comix.to is a manga reading platform with a large catalog. Returns chapter images as a list of CDN image URLs.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/manga/comix/home",
+              "summary": "Get homepage",
+              "description": "Returns featured and recently updated manga from Comix.",
+              "params": [],
+              "response_example": { "featured": [], "recent": [] }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/manga/comix/search",
+              "summary": "Search manga",
+              "description": "Search the Comix catalog by title or keyword. Returns results with hash_id and manga_id fields needed for subsequent calls.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Manga title or keyword.", "example": "one piece" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." }
+              ],
+              "response_example": {
+                "results": [{ "title": "One Piece", "hash_id": "q9w8x", "manga_id": 123, "cover": "https://..." }]
+              }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/manga/comix/info/{slug}",
+              "summary": "Get manga info",
+              "description": "Returns full metadata for a manga — title, synopsis, genres, status, and the hash_id used in other endpoints.",
+              "params": [
+                { "name": "slug", "in": "path", "required": true, "type": "string", "description": "The manga slug or hash_id.", "example": "q9w8x" }
+              ],
+              "response_example": {
+                "title": "One Piece", "hash_id": "q9w8x", "synopsis": "...", "genres": ["Action"], "status": "Ongoing"
+              }
+            },
+            {
+              "id": "chapters",
+              "method": "GET",
+              "path": "/manga/comix/chapters/{slug}",
+              "summary": "Get chapter list",
+              "description": "Returns a paginated list of chapters. Each chapter has a numeric chapter_id used to fetch images.",
+              "params": [
+                { "name": "slug", "in": "path", "required": true, "type": "string", "description": "The manga hash_id.", "example": "q9w8x" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." }
+              ],
+              "response_example": {
+                "chapters": [{ "number": 1, "title": "Romance Dawn", "chapter_id": 7217264 }]
+              }
+            },
+            {
+              "id": "chapter",
+              "method": "GET",
+              "path": "/manga/comix/chapter/{manga_slug}/{chapter_slug}",
+              "summary": "Get chapter images",
+              "description": "Returns all page images for a chapter as an array of objects with width, height, and CDN URL. Ready to render directly.",
+              "params": [
+                { "name": "manga_slug", "in": "path", "required": true, "type": "string", "description": "The manga hash_id.", "example": "q9w8x" },
+                { "name": "chapter_slug", "in": "path", "required": true, "type": "string", "description": "The numeric chapter_id from the chapters list.", "example": "7217264" }
+              ],
+              "response_example": {
+                "images": [
+                  { "width": 800, "height": 1200, "url": "https://cdn.comix.to/page1.jpg" },
+                  { "width": 800, "height": 1200, "url": "https://cdn.comix.to/page2.jpg" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "atsu",
+          "name": "Atsu",
+          "description": "Atsu is a manga source with a broad catalog and clean image CDN.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/manga/atsu/home",
+              "summary": "Get homepage",
+              "description": "Returns featured and popular manga from Atsu's homepage.",
+              "params": [],
+              "response_example": { "popular": [], "new": [] }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/manga/atsu/search",
+              "summary": "Search manga",
+              "description": "Search Atsu's catalog. Returns manga with IDs used for detail and chapter requests.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Manga title or keyword.", "example": "berserk" },
+                { "name": "limit", "in": "query", "required": false, "type": "integer", "default": 12, "description": "Max results to return." }
+              ],
+              "response_example": { "results": [{ "id": "berserk", "title": "Berserk", "cover": "https://..." }] }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/manga/atsu/info/{manga_id}",
+              "summary": "Get manga info",
+              "description": "Returns full details for a manga including synopsis, author, genres, and chapter list.",
+              "params": [
+                { "name": "manga_id", "in": "path", "required": true, "type": "string", "description": "The manga ID from search.", "example": "berserk" }
+              ],
+              "response_example": {
+                "title": "Berserk", "author": "Kentaro Miura", "genres": ["Action", "Dark Fantasy"], "chapters": 374
+              }
+            },
+            {
+              "id": "chapter",
+              "method": "GET",
+              "path": "/manga/atsu/chapter/{manga_id}/{chapter_id}",
+              "summary": "Get chapter images",
+              "description": "Returns all page image URLs for a specific chapter.",
+              "params": [
+                { "name": "manga_id", "in": "path", "required": true, "type": "string", "description": "The manga ID.", "example": "berserk" },
+                { "name": "chapter_id", "in": "path", "required": true, "type": "string", "description": "The chapter ID.", "example": "ch-1" }
+              ],
+              "response_example": {
+                "images": ["https://cdn.atsu.io/berserk/ch1/page1.jpg", "https://cdn.atsu.io/berserk/ch1/page2.jpg"]
+              }
+            }
+          ]
+        },
+        {
+          "id": "nato",
+          "name": "Nato",
+          "description": "Nato is a manga reader with clean image delivery and a broad catalog.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/manga/nato/home",
+              "summary": "Get homepage",
+              "description": "Returns popular and recently updated manga from Nato.",
+              "params": [],
+              "response_example": { "popular": [], "latest": [] }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/manga/nato/search",
+              "summary": "Search manga",
+              "description": "Search Nato's manga catalog. Returns slugs used for subsequent calls.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Manga title or keyword.", "example": "vinland saga" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." }
+              ],
+              "response_example": { "results": [{ "slug": "vinland-saga", "title": "Vinland Saga" }] }
+            },
+            {
+              "id": "info",
+              "method": "GET",
+              "path": "/manga/nato/info/{slug}",
+              "summary": "Get manga info",
+              "description": "Returns full manga metadata and a list of chapters.",
+              "params": [
+                { "name": "slug", "in": "path", "required": true, "type": "string", "description": "The manga slug from search.", "example": "vinland-saga" }
+              ],
+              "response_example": {
+                "title": "Vinland Saga", "author": "Makoto Yukimura", "status": "Ongoing", "chapters": [{ "slug": "chapter-1" }]
+              }
+            },
+            {
+              "id": "chapter",
+              "method": "GET",
+              "path": "/manga/nato/chapter/{manga_slug}/{chapter_slug}",
+              "summary": "Get chapter images",
+              "description": "Returns all page image URLs for a chapter.",
+              "params": [
+                { "name": "manga_slug", "in": "path", "required": true, "type": "string", "description": "The manga slug.", "example": "vinland-saga" },
+                { "name": "chapter_slug", "in": "path", "required": true, "type": "string", "description": "The chapter slug.", "example": "chapter-1" }
+              ],
+              "response_example": { "images": ["https://cdn.nato.io/vinland/ch1/p1.jpg"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "movies",
+      "name": "Movies & TV",
+      "description": "Stream movies and TV series from multiple providers. Returns M3U8 streams, captions, and full metadata.",
+      "providers": [
+        {
+          "id": "moviebox",
+          "name": "MovieBox",
+          "description": "MovieBox (moviebox.ph) has a large catalog of movies, TV series, and animations with multi-language support, dubs, and subtitles.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "home",
+              "method": "GET",
+              "path": "/movies/moviebox/home",
+              "summary": "Get homepage",
+              "description": "Returns the MovieBox homepage — banner items, popular series, trending movies, and more. Each item includes a slug and subject_id for detail lookups.",
+              "params": [],
+              "response_example": {
+                "sections": [
+                  { "section": "Banner", "count": 8, "items": [{ "name": "Man on Fire", "slug": "man-on-fire-xyz", "subject_id": "123456" }] }
+                ]
+              }
+            },
+            {
+              "id": "movies",
+              "method": "GET",
+              "path": "/movies/moviebox/movies",
+              "summary": "Browse movies",
+              "description": "Returns a paginated list of movies. Sort by recommendation, newest, rating, or most watched.",
+              "params": [
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." },
+                { "name": "sort", "in": "query", "required": false, "type": "string", "default": "RECOMMEND", "description": "Sort order: RECOMMEND, NEWEST, RATING, MOST_PLAY." }
+              ],
+              "response_example": {
+                "page": 1, "per_page": 24, "total": 3200,
+                "items": [{ "name": "Avengers: Endgame", "slug": "avengers-endgame-xyz", "subject_id": "789", "rating": "8.4" }]
+              }
+            },
+            {
+              "id": "tv-series",
+              "method": "GET",
+              "path": "/movies/moviebox/tv-series",
+              "summary": "Browse TV series",
+              "description": "Returns a paginated list of TV series. Same sort options as movies.",
+              "params": [
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." },
+                { "name": "sort", "in": "query", "required": false, "type": "string", "default": "RECOMMEND", "description": "Sort order." }
+              ],
+              "response_example": {
+                "page": 1, "per_page": 24, "total": 1500,
+                "items": [{ "name": "Breaking Bad", "slug": "breaking-bad-xyz", "subject_id": "456" }]
+              }
+            },
+            {
+              "id": "animation",
+              "method": "GET",
+              "path": "/movies/moviebox/animation",
+              "summary": "Browse animation",
+              "description": "Returns a paginated list of animated content.",
+              "params": [
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." },
+                { "name": "sort", "in": "query", "required": false, "type": "string", "default": "RECOMMEND", "description": "Sort order." }
+              ],
+              "response_example": { "page": 1, "items": [{ "name": "Spider-Man: Into the Spider-Verse", "slug": "spider-verse-xyz" }] }
+            },
+            {
+              "id": "search",
+              "method": "GET",
+              "path": "/movies/moviebox/search",
+              "summary": "Search movies & TV",
+              "description": "Search across all MovieBox content — movies, series, and animation. Returns slugs and subject IDs.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Title to search for.", "example": "inception" },
+                { "name": "page", "in": "query", "required": false, "type": "integer", "default": 1, "description": "Page number." }
+              ],
+              "response_example": {
+                "query": "inception", "page": 1,
+                "items": [{ "name": "Inception", "slug": "inception-abc", "subject_id": "111" }]
+              }
+            },
+            {
+              "id": "search-suggest",
+              "method": "GET",
+              "path": "/movies/moviebox/search/suggest",
+              "summary": "Search suggestions",
+              "description": "Returns quick autocomplete suggestions for a query — great for a live search box.",
+              "params": [
+                { "name": "q", "in": "query", "required": true, "type": "string", "description": "Partial search query.", "example": "inc" }
+              ],
+              "response_example": {
+                "suggestions": [{ "title": "Inception", "slug": "inception-abc", "subject_id": "111" }]
+              }
+            },
+            {
+              "id": "detail",
+              "method": "GET",
+              "path": "/movies/moviebox/detail/{slug}",
+              "summary": "Get full detail",
+              "description": "Returns complete metadata: title, description, genre, country, IMDb rating, poster, trailer, cast, available dubs per language (each with its own slug), and season/episode info for series.",
+              "params": [
+                { "name": "slug", "in": "path", "required": true, "type": "string", "description": "The content slug from search or home.", "example": "avengers-endgame-xyz" }
+              ],
+              "response_example": {
+                "subject_id": "789",
+                "subject_type": "movie",
+                "title": "Avengers: Endgame",
+                "description": "After Thanos erased half of all life...",
+                "release_date": "2019-04-26",
+                "duration": 10860,
+                "genre": "Action,Adventure,Sci-Fi",
+                "country": "United States",
+                "imdb_rating": "8.4",
+                "poster_url": "https://cdn.example.com/poster.jpg",
+                "has_resource": true,
+                "is_series": false,
+                "trailer": { "url": "https://cdn.example.com/trailer.mp4", "duration": 120, "cover": "https://..." },
+                "stars": [{ "name": "Robert Downey Jr.", "role": null }],
+                "dubs": [{ "language": "Original Audio", "code": "en", "original": true, "type": "dub", "subject_id": "789", "slug": "avengers-endgame-xyz" }],
+                "seasons": []
+              }
+            },
+            {
+              "id": "stream",
+              "method": "GET",
+              "path": "/movies/moviebox/stream/{subject_id}",
+              "summary": "Get stream",
+              "description": "Returns stream sources for a movie or TV episode. For movies use se=0&ep=0. For series pass the season and episode numbers. Returns sources list, m3u8 if available, and whether content is limited.",
+              "params": [
+                { "name": "subject_id", "in": "path", "required": true, "type": "string", "description": "The subject_id from detail.", "example": "789" },
+                { "name": "detail_path", "in": "query", "required": true, "type": "string", "description": "The content slug.", "example": "avengers-endgame-xyz" },
+                { "name": "se", "in": "query", "required": false, "type": "integer", "default": 0, "description": "Season number. Use 0 for movies." },
+                { "name": "ep", "in": "query", "required": false, "type": "integer", "default": 0, "description": "Episode number. Use 0 for movies." }
+              ],
+              "response_example": {
+                "subject_id": "789",
+                "season": 0, "episode": 0,
+                "has_resource": true,
+                "m3u8": "https://cdn.example.com/stream/master.m3u8",
+                "sources": [{ "resolution": "1080p", "format": "hls", "url": "https://cdn.example.com/stream/1080.m3u8" }],
+                "limited": false
+              }
+            },
+            {
+              "id": "captions",
+              "method": "GET",
+              "path": "/movies/moviebox/captions/{subject_id}",
+              "summary": "Get captions",
+              "description": "Returns available subtitle/caption tracks for a movie or episode — includes language, label, and VTT/SRT URL.",
+              "params": [
+                { "name": "subject_id", "in": "path", "required": true, "type": "string", "description": "The subject_id from detail.", "example": "789" },
+                { "name": "detail_path", "in": "query", "required": true, "type": "string", "description": "The content slug.", "example": "avengers-endgame-xyz" }
+              ],
+              "response_example": {
+                "captions": [
+                  { "language": "English", "code": "en", "url": "https://cdn.example.com/subs/en.vtt", "format": "vtt" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "vidlink",
+          "name": "VidLink",
+          "description": "VidLink provides TMDB-based movie and TV streaming. Pass a TMDB ID and get a direct M3U8 stream back.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "movie",
+              "method": "GET",
+              "path": "/movies/vidlink/movie/{movie_id}",
+              "summary": "Get movie stream",
+              "description": "Returns streaming sources for a movie using its TMDB ID. The m3u8 field is surfaced at the top level for easy access.",
+              "params": [
+                { "name": "movie_id", "in": "path", "required": true, "type": "string", "description": "The TMDB movie ID.", "example": "299534" }
+              ],
+              "response_example": {
+                "stream": { "playlist": "https://cdn.vidlink.pro/hls/master.m3u8" },
+                "m3u8": "https://cdn.vidlink.pro/hls/master.m3u8"
+              }
+            },
+            {
+              "id": "tv",
+              "method": "GET",
+              "path": "/movies/vidlink/tv/{tv_id}/{season}/{episode}",
+              "summary": "Get TV episode stream",
+              "description": "Returns streaming sources for a TV episode using its TMDB ID, season, and episode number.",
+              "params": [
+                { "name": "tv_id", "in": "path", "required": true, "type": "string", "description": "The TMDB TV show ID.", "example": "1396" },
+                { "name": "season", "in": "path", "required": true, "type": "integer", "description": "Season number.", "example": 1 },
+                { "name": "episode", "in": "path", "required": true, "type": "integer", "description": "Episode number.", "example": 1 }
+              ],
+              "response_example": {
+                "stream": { "playlist": "https://cdn.vidlink.pro/hls/master.m3u8" },
+                "m3u8": "https://cdn.vidlink.pro/hls/master.m3u8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "vidnest",
+          "name": "VidNest",
+          "description": "VidNest supports TMDB-based movies and TV, plus AniList-based anime streaming. Also provides subtitle tracks.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "sources",
+              "method": "GET",
+              "path": "/movies/vidnest/sources",
+              "summary": "Get movie/TV sources",
+              "description": "Returns stream sources for a movie or TV episode using its TMDB ID. Specify mediaType as 'movie' or 'tv'.",
+              "params": [
+                { "name": "tmdbId", "in": "query", "required": true, "type": "string", "description": "TMDB content ID.", "example": "299534" },
+                { "name": "mediaType", "in": "query", "required": true, "type": "string", "description": "movie or tv.", "example": "movie" },
+                { "name": "seasonId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Season number (TV only)." },
+                { "name": "episodeId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Episode number (TV only)." }
+              ],
+              "response_example": {
+                "m3u8": "https://cdn.vidnest.io/hls/master.m3u8",
+                "streams": [{ "link": "https://cdn.vidnest.io/hls/master.m3u8", "resolution": 1080 }]
+              }
+            },
+            {
+              "id": "anime",
+              "method": "GET",
+              "path": "/movies/vidnest/anime",
+              "summary": "Get anime sources",
+              "description": "Returns streaming sources for an anime episode using its AniList ID. Supports sub and dub.",
+              "params": [
+                { "name": "anilistId", "in": "query", "required": true, "type": "string", "description": "AniList anime ID.", "example": "11061" },
+                { "name": "episode", "in": "query", "required": false, "type": "string", "default": "1", "description": "Episode number." },
+                { "name": "type", "in": "query", "required": false, "type": "string", "default": "sub", "description": "sub or dub." },
+                { "name": "provider", "in": "query", "required": false, "type": "string", "default": "hianime", "description": "Anime provider name." }
+              ],
+              "response_example": {
+                "m3u8": "https://cdn.vidnest.io/anime/hls/ep1.m3u8",
+                "streams": [{ "link": "https://cdn.vidnest.io/anime/hls/ep1.m3u8" }]
+              }
+            },
+            {
+              "id": "subtitles",
+              "method": "GET",
+              "path": "/movies/vidnest/subtitles",
+              "summary": "Get subtitles",
+              "description": "Returns available subtitle tracks for a movie or TV episode.",
+              "params": [
+                { "name": "tmdbId", "in": "query", "required": true, "type": "string", "description": "TMDB content ID.", "example": "299534" },
+                { "name": "mediaType", "in": "query", "required": true, "type": "string", "description": "movie or tv.", "example": "movie" },
+                { "name": "seasonId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Season number (TV only)." },
+                { "name": "episodeId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Episode number (TV only)." }
+              ],
+              "response_example": {
+                "subtitles": [{ "language": "English", "url": "https://cdn.vidnest.io/subs/en.vtt" }]
+              }
+            }
+          ]
+        },
+        {
+          "id": "videasy",
+          "name": "Videasy",
+          "description": "Videasy aggregates streams from multiple providers. Supports movies and TV with optional provider selection.",
+          "status": "working",
+          "endpoints": [
+            {
+              "id": "sources",
+              "method": "GET",
+              "path": "/movies/videasy/sources",
+              "summary": "Get sources",
+              "description": "Returns streaming sources from Videasy. Provide the title, TMDB ID, and media type. Optionally select a provider and pass IMDb ID or year for better matching.",
+              "params": [
+                { "name": "title", "in": "query", "required": true, "type": "string", "description": "The content title.", "example": "Inception" },
+                { "name": "mediaType", "in": "query", "required": true, "type": "string", "description": "movie or tv.", "example": "movie" },
+                { "name": "tmdbId", "in": "query", "required": true, "type": "string", "description": "TMDB content ID.", "example": "27205" },
+                { "name": "provider", "in": "query", "required": false, "type": "string", "default": "myflixerzupcloud", "description": "Provider name for Videasy." },
+                { "name": "year", "in": "query", "required": false, "type": "string", "description": "Release year for better matching.", "example": "2010" },
+                { "name": "episodeId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Episode number (TV only)." },
+                { "name": "seasonId", "in": "query", "required": false, "type": "string", "default": "1", "description": "Season number (TV only)." },
+                { "name": "imdbId", "in": "query", "required": false, "type": "string", "description": "IMDb ID for additional matching.", "example": "tt1375666" }
+              ],
+              "response_example": {
+                "m3u8": "https://cdn.videasy.net/hls/master.m3u8",
+                "data": { "stream": [{ "url": "https://cdn.videasy.net/hls/master.m3u8" }] }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
