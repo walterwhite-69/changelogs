@@ -1,8 +1,8 @@
 {
-  "version": "12.0",
-  "title": "Kurovexa 2.0",
+  "version": "13.0",
+  "title": "Anivexa 2.1",
   "updates": {
-    "Update": "Kurovexa may face a lot of issues now. Sorry for inconvenience",
-    "Info": "Find me on YumeZone [Discord](https://discord.gg/zs22ZJttZM)."
+    "Update": "Kurovexa has been rebranded to Anivexa!",
+    "Changes": "- Fixed some UI bugs\n- Added MAL Sync\n- Feel free to report bug on our discord or github"
   }
 }
