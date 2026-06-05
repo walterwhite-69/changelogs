@@ -3,6 +3,6 @@
   "title": "Anivexa 2.1",
   "updates": {
     "Update": "Kurovexa has been rebranded to Anivexa!",
-    "Changes": "- Migrated Anivexa to SvelteKit\n- Improved smoother page navigation and state handling\n- Fixed multiple player issues\n- Added MAL Sync\n- Anivexa now has its own backend\n- Anivexa no longer relies on Miruro\n- Fixed some UI bugs\n- Feel free to report bugs on our Discord or GitHub"
+    "Changes": "- Migrated Anivexa to SvelteKit\n- Improved smoother page navigation and state handling\n- Fixed multiple player issues\n- Added MAL Sync\n- Fixed some sources\n- Fixed some UI bugs\n- Feel free to report bugs on our Discord or GitHub"
   }
 }
